@@ -1,0 +1,4 @@
+aiogram==3.10.0 
+pydantic_settings
+aioredis 
+aiogram-dialog
