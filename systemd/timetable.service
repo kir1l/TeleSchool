@@ -1,0 +1,14 @@
+[Unit]
+Description=Timetable bot
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/bots/timetable_bot
+ExecStart=/bots/timetable_bot/venv/bin/python3 /bots/timetable_bot/main.py
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,13 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import SecretStr
-
+from pathlib import Path
 
 class Settings(BaseSettings):
     bot_token: SecretStr
-    db_token: SecretStr
-    redis_url: SecretStr
     model_config: SettingsConfigDict = SettingsConfigDict(
-        env_file='.env',
+        env_file=Path(__file__).parent / '.env',
         env_file_encoding='utf-8'
     )
 
