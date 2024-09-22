@@ -13,7 +13,6 @@
 
 ## Технологии
 
-- Python 3.x
 - aiogram 3.x
 - SQLite
 - APScheduler

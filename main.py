@@ -4,8 +4,9 @@ from aiogram.filters.command import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from handlers import user_commands, bot_messages, handler_utils
-from utils.scheduler import schedule_daily_tasks, init_db
+from utils.scheduler import schedule_daily_tasks
 from config_reader import config
+from utils.database import db
 
 import logging
 
@@ -19,7 +20,7 @@ async def main():
     dp = Dispatcher()
 
     # DB
-    init_db()
+    db.init_db()
 
     # Logging config
     logging.basicConfig(

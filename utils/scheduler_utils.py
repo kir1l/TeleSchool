@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta
 import logging
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ DAYS_TRANSLATION = {
 }
 
 def format_time(minutes):
-    logger.debug(f"Formatting time for {minutes} minutes")
+    logger.info(f"Formatting time for {minutes} minutes")
     hours, mins = divmod(minutes, 60)
     
     if hours > 0:
@@ -28,7 +29,7 @@ def format_time(minutes):
         return get_minute_string(mins)
 
 def get_minute_string(mins):
-    logger.debug(f"Getting minute string for {mins} minutes")
+    logger.info(f"Getting minute string for {mins} minutes")
     if mins % 10 == 1 and mins % 100 != 11:
         return f"{mins} минута"
     elif 2 <= mins % 10 <= 4 and (mins % 100 < 10 or mins % 100 >= 20):
@@ -38,7 +39,7 @@ def get_minute_string(mins):
 
 def is_sunday(date=None):
     date = date or datetime.now()
-    logger.debug(f"Checking if {date} is Sunday")
+    logger.info(f"Checking if {date} is Sunday")
     return date.weekday() == 6
 
 def load_schedule():
@@ -48,24 +49,31 @@ def load_schedule():
 
 def is_odd_week(date=None):
     date = date or datetime.now()
-    logger.debug(f"Checking if {date} is in an odd week")
+    logger.info(f"Checking if {date} is in an odd week")
     return date.isocalendar()[1] % 2 == 0
 
 def get_week_type(date=None):
-    logger.debug(f"Getting week type for {date}")
+    logger.info(f"Getting week type for {date}")
     return "odd_week" if is_odd_week(date) else "even_week"
 
-def get_weekly_schedule():
-    logger.info("Generating weekly schedule")
-    schedule = load_schedule()
-    week_type = get_week_type()
-    result = f"📅 Расписание на {'нечетную' if is_odd_week() else 'четную'} неделю:\n\n"
+def get_weekly_schedule(week_type=None):
+    if week_type is None:
+        week_type = "odd_week" if is_odd_week() else "even_week"
     
+    schedule = load_schedule()
+    result = f"📅 Расписание на {'нечетную' if week_type == 'odd_week' else 'четную'} неделю:\n\n"
+
     for day, lessons in schedule['groups'][0]['schedule'][week_type].items():
         result += format_day_schedule(day, lessons)
     
-    logger.info("Generated weekly schedule")
-    return result
+    opposite_week = "even_week" if week_type == "odd_week" else "odd_week"
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=f"Посмотреть {'четную' if week_type == 'odd_week' else 'нечетную'} неделю", 
+                              callback_data=f"view_week-{opposite_week}")]
+    ])
+    
+    logger.info(f'Generated week. Type: {week_type}')
+    return result, keyboard
 
 def get_today_schedule():
     logger.info("Getting today's schedule")
@@ -136,28 +144,28 @@ def get_next_lesson():
     return get_next_day_lesson(schedule, week_type)
 
 def format_day_schedule(day, lessons):
-    logger.debug(f"Formatting schedule for {day}")
+    logger.info(f"Formatting schedule for {day}")
     result = f"🗓 {DAYS_TRANSLATION[day]}:\n"
     result += format_lessons(lessons)
     return result + "\n"
 
 def format_lessons(lessons):
-    logger.debug(f"Formatting {len(lessons)} lessons")
+    logger.info(f"Formatting {len(lessons)} lessons")
     return "".join([f"{i}. {lesson['time'].replace('-', ':')} - {lesson['subject']} ({lesson['type']}) - {lesson['room']}\n"
                     for i, lesson in enumerate(lessons, 1)])
 
 def get_lesson_times(time_str):
-    logger.debug(f"Getting lesson times for {time_str}")
+    logger.info(f"Getting lesson times for {time_str}")
     start_time = datetime.strptime(time_str, "%H-%M").time()
     end_time = (datetime.combine(datetime.today(), start_time) + timedelta(minutes=90)).time()
     return start_time, end_time
 
 def format_current_lesson(lesson, minutes_left):
-    logger.debug(f"Formatting current lesson: {lesson['subject']}")
+    logger.info(f"Formatting current lesson: {lesson['subject']}")
     return f"🕒 Текущая пара:\n{lesson['subject']} ({lesson['type']})\nАудитория: {lesson['room']}\nДо конца пары осталось {format_time(minutes_left)}"
 
 def format_next_lesson(lesson, minutes_until_start, include_time=False):
-    logger.debug(f"Formatting next lesson: {lesson['subject']}")
+    logger.info(f"Formatting next lesson: {lesson['subject']}")
     time_info = f"Начало в {lesson['time'].replace('-', ':')}\n" if include_time else ""
     return f"🕒 Следующая пара:\n{lesson['subject']} ({lesson['type']})\nАудитория: {lesson['room']}\n{time_info}До начала занятия осталось: {format_time(minutes_until_start)}"
 
